@@ -1585,7 +1585,7 @@ static int ov2740_probe(struct i2c_client *client)
 	 */
 	pm_runtime_set_active(&client->dev);
 	pm_runtime_enable(&client->dev);
-	pm_runtime_idle(&client->dev);
+	pm_runtime_get(&client->dev);
 
 	return 0;
 
