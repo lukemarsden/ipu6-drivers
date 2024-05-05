@@ -143,7 +143,7 @@ static const guid_t cio2_sensor_module_guid =
 
 static const struct ov2740_reg mipi_data_rate_720mbps[] = {
 	{0x0103, 0x01},
-	{0xffff, 0x10},
+	{0xffff, 0x20},
 	{0x0302, 0x4b},
 	{0x030d, 0x4b},
 	{0x030e, 0x02},
@@ -153,7 +153,7 @@ static const struct ov2740_reg mipi_data_rate_720mbps[] = {
 
 static const struct ov2740_reg mipi_data_rate_360mbps[] = {
 	{0x0103, 0x01},
-	{0xffff, 0x10},
+	{0xffff, 0x20},
 	{0x0302, 0x4b},
 	{0x0303, 0x01},
 	{0x030d, 0x4b},
@@ -1044,7 +1044,9 @@ static int ov2740_power_on(struct device *dev)
 	struct ov2740 *ov2740 = to_ov2740(sd);
 	int ret = 0;
 
+	msleep(20);
 	ret = clk_prepare_enable(ov2740->clk);
+	msleep(20);
 	gpiod_set_value_cansleep(ov2740->reset_gpio, 0);
 	msleep(20);
 
