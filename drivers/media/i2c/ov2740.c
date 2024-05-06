@@ -1501,6 +1501,12 @@ static int ov2740_parse_power(struct ov2740 *ov2740)
 		dev_err(dev, "error while getting clk: %ld\n", ret);
 		ov2740->clk = NULL;
 		return (int)ret;
+	} else if (ov2740->reset_gpio) {
+		/*
+		 * Ensure reset is asserted for at least 20 ms before
+		 * ov2740_power_on() deasserts it.
+		 */
+		msleep(20);
 	}
 
 	return 0;
