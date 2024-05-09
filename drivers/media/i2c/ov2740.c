@@ -1032,8 +1032,13 @@ static int ov2740_power_off(struct device *dev)
 	int ret = 0;
 
 	gpiod_set_value_cansleep(ov2740->reset_gpio, 1);
-	clk_disable_unprepare(ov2740->clk);
+	/*
+	 * Ensure reset is asserted for at least 20 ms before disabling the clk.
+	 * This also assures reset is properly asserted for 20 ms when a runtime
+	 * suspend is immediately followed by a runtime resume.
+	 */
 	msleep(20);
+	clk_disable_unprepare(ov2740->clk);
 
 	return ret;
 }
@@ -1045,6 +1050,10 @@ static int ov2740_power_on(struct device *dev)
 	int ret = 0;
 
 	ret = clk_prepare_enable(ov2740->clk);
+
+	/* Give clk time to stabilize */
+	msleep(20);
+
 	gpiod_set_value_cansleep(ov2740->reset_gpio, 0);
 	msleep(20);
 
@@ -1485,12 +1494,18 @@ static int ov2740_parse_power(struct ov2740 *ov2740)
 	long ret;
 
 	ov2740->reset_gpio =
-		devm_gpiod_get_optional(dev, "reset", GPIOD_OUT_LOW);
+		devm_gpiod_get_optional(dev, "reset", GPIOD_OUT_HIGH);
 	if (IS_ERR(ov2740->reset_gpio)) {
 		ret = PTR_ERR(ov2740->reset_gpio);
 		dev_err(dev, "error while getting reset gpio: %ld\n", ret);
 		ov2740->reset_gpio = NULL;
 		return (int)ret;
+	} else if (ov2740->reset_gpio) {
+		/*
+		 * Ensure reset is asserted for at least 20ms before powering
+		 * on the sensor.
+		 */
+		msleep(20);
 	}
 
 	ov2740->clk = devm_clk_get_optional(dev, "clk");
